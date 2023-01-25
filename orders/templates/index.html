@@ -1,0 +1,135 @@
+{% extends 'layout.html' %}
+{% block title %} 
+    Menu
+{% endblock %}
+{% load humanize %}
+{% block content %}
+{% for post in posts %}
+<div class="col" style="text-align: center;">
+  <h1>Pinocchio's Pizza & Subs</h1>
+</div>
+
+<article>
+    <div class="container-article">
+        <img src="../../static/pizza.jpg">
+        <div>
+          <h2 class="username"><a href="{% url 'profile' post.user.username %}">@{{ post.user.username }}</a></h2>
+          <i class="clock"></i>
+          <time data-time="#">{{ post.timestamp|naturaltime }}</time>
+          <div class="post">{{ post.content }}</div>
+      </div>
+    </div>
+</article>
+{% endfor %}
+  <div class="tab-content" id="pills-tabContent">
+    <div
+      class="tab-pane fade show active container"
+      id="pills-profile"
+      role="tabpanel"
+      aria-labelledby="pills-profile-tab"
+    >
+      <h2 class="h4 m-4 text-primary">Menú</h2>
+      <ul class="navbar navbar-expand-lg navbar-light bg-light border">
+        {%for item_cat in item_cats %}
+        <li class="nav-item">
+            <a class="nav-link" href="#{{item_cat.name}}">{{item_cat.name}}</a>
+        </li>
+        {%endfor%}
+      </ul>
+
+      <div class="row row-cols-sm-1">
+        {% block tt %}
+        {%if request.user.is_staff %}
+        {% if item_cats %}
+        <center><h1>Agregue + elementos a través de la interfaz de administración <a href="/admin/orders/item/add" class="badge badge-secondary" style="background-color: chocolate;">Panel de administracion</a></h1></center>
+        {%endif%}
+        {%endif%}
+        {%endblock%}
+        {% block body %}
+            {%for item_cat in item_cats %}
+            <h3 id="{{item_cat.name}}" style="text-align: center;"><strong>{{item_cat.name}}</strong></h3>
+            <div class="row row-cols-1 row-cols-md-3">
+                {% for item in items %}
+                    {% if item.category == item_cat %}
+                    <div class="col mb-4">
+                        <div class="card h-100"">
+                            <div class="card-body">
+                                <h5 class="card-title">
+                                  {%load static%}
+                                  <img src="{{item.image}}" style="width:120px; height: 120px;">
+                                    <strong>
+                                        {{item.name}} 
+                                        {%if item.item_type != none %}
+                                            <p>Oferta</p>
+                                            
+                                            [ <span class="text-muted">{{item.item_type}}</span> ]
+                                        {%endif%}
+                                    </strong>
+                                    <button style="float: right;" class="btn btn-outline-primary" data-toggle="modal" data-target="#item-{{item.id}}-modal">Añadir pedido</button>
+                                </h5>
+                                <p class="card-text">Pequeña: {{item.price_small}}<br>Grande: {{item.price_large}} </strong></p>
+                            </div>
+                        </div>
+                    </div>
+        
+                    {%endif%}
+                {%endfor%}
+              </div><hr>
+                {% for item in items %}
+                    {% if item.category == item_cat %}
+                    <!-- Create modal for this item -->
+                    <div class="modal fade" id="item-{{item.id}}-modal" tabindex="-1" role="dialog" aria-labelledby="item-{{item.id}}-modal-CenterTitle" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                            <h5 class="modal-title" id="exampleModalLongTitle">Personalizar <strong>{{item.name}}</strong></h5>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                            </div>
+                            <div class="modal-body">
+                                <form onsubmit="AlertUser('{{item.id}}')" action="{% url 'add_item' %}" method="POST">
+                                    {%csrf_token%}
+                                    <input name="item-id" type="hidden" value="{{item.id}}">
+                                    {% if item.max_topping %}
+                                    <input name="max-topping" type="hidden" value="{{item.max_topping}}">
+                                        {% for i in item.max_topping %}
+                                            <div class="form-group">
+                                            <label for="exampleFormControlSelect1">Seleccionar cobertura {{i}}</label>
+                                            <select name="select-{{i}}" class="form-control" id="exampleFormControlSelect1">
+                                                {% for topping in toppings %}
+                                                <option value="{{topping.id}}">{{topping.name}}</option>
+                                                {%endfor%}
+                                            </select>
+                                            </div>
+                                        {%endfor%}
+                                    {%endif%}
+                                    <div class="form-group">
+                                    <label for="exampleFormControlSelect1">Selecciona el tamaño</label>
+                                    <select name="size-select" class="form-control" id="exampleFormControlSelect1">
+                                        {% if item.price_small %}
+                                            <option value="S">Pequeña</option>
+                                        {%endif%}
+                                        {% if item.price_large %}
+                                            <option value="L">Grande</option>
+                                        {%endif%}
+                                    </select>
+                                    </div>
+                                    <button style="float: right;" type="submit" class="btn btn-primary">Añadir al carrito</button>
+                                </form>
+                            </div>
+                        </div>
+                        </div>
+                    </div>
+                    {%endif%}
+                {%endfor%}
+            {%endfor%}
+        {%endblock%}
+      </div>
+    </div>
+  </div>
+
+  <footer class="bg-dark p-3 mt-5">
+    <p class="text-center m-0 text-muted">Gracias por Ver y no comprar ☻</p>
+  </footer>
+{% endblock %}
